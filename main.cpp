@@ -200,7 +200,6 @@ void runBoth(unsigned psize, double cost, unsigned levels, unsigned maxlevel, do
 
 
 void runGradient(unsigned psize, double beta, double eps, double mut, unsigned repeats, double cost, CtpGame& game, RanGen& ran, ofstream& gf){
-    //redo implementation of run.gradient as it now assumes that each action is present
     StrategySpace strategies;
     strategies.createEquilibriumStrategies(game);
     Strategy neq(3,4,4);
@@ -219,7 +218,6 @@ void runGradient(unsigned psize, double beta, double eps, double mut, unsigned r
 }
 
 void runGradientEpsilon(unsigned psize, double beta, double mut, unsigned repeats, double cost, CtpGame& game, RanGen& ran, ofstream& gf){
-    //redo implementation of run.gradient as it now assumes that each action is present
     cout << "Beta =" << beta << endl;
     StrategySpace strategies;
     strategies.createEquilibriumStrategies(game);
