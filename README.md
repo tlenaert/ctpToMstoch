@@ -48,6 +48,6 @@ which should produce an executable `ctpstoch`.
 
 
 # Running guide
-When executing `ctpstoch` wihtou modifications in the `main.cpp`, the program will produce for an ICG with L=4 the results for &Beta=0.3 and &epsilon = 0.18.
+When executing `ctpstoch` wihtou modifications in the `main.cpp`, the program will produce for an ICG with L=4 the results for &#946=0.3 and &epsilon = 0.18.
 
 
