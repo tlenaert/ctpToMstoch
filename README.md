@@ -44,8 +44,10 @@ Once that works run
 ```
 make
 ```
+which should produce an executable `ctpstoch`.
+
 
 # Running guide
-Once compiled, an executable `ctpstoch` is produced. When executed this will prodice for a ICG with L=4 the results for Beta=0.3 and epsilon = 0.18.
+Once compiled, an executable `ctpstoch` is produced. When executed this will produce for an ICG with L=4 the results for `&beta=0.3` and `&epsilon = 0.18`.
 
 
