@@ -32,8 +32,8 @@ The package compilation was tested on OS X and Linux operating systems.
 - Windows:
 
 To compile you will need
-GSL (tested for version 2.6 linux platform and version 2.7 on mac os X) 
-GCC (teste with gcc-9.3 om linux platform and clang on mac os X)
+- GSL (tested for version 2.6 linux platform and version 2.7 on mac os X) 
+- GCC (tested with gcc-9.3 om linux platform and clang on mac os X)
 
 # Compilation Guide
 A CMAKE file is provide. Version 3.16.4 was used on the linux platform. 
