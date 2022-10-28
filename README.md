@@ -8,6 +8,7 @@ The functions for producing each result are part of the main file, which needs t
 - [System Requirements](#system-requirements)
 - [Compilation Guide](#compilation-guide)
 - [Demo Guide](#demo)
+- [Results](#demo)
 - [Citation](#citation)
 # Repo Contents
 
@@ -73,7 +74,13 @@ In `main.cpp` there are 5 functions that provide the results need to reproduce t
 - `runGradient` : this function produces the gradient of selection for specific values of  β and ε.
 - `RunGradientEpsilon` : this function produces multiple gradient of selections for different ε-values.
 
-#Output 
+# Output 
 The raw output files as well as the R files needed to reproduce the figures can be found in the folder `results`.
 
 The R-scripts can simply be excuted in the same folder as the raw data files.
+
+# Citation
+
+When using or extending this code, please cite :
+
+T. Lenaerts, J.M. Pacheco and F.C. Santos (2022) Evolution of a Theory of Minde ...
