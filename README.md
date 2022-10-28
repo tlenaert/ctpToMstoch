@@ -36,15 +36,15 @@ GSL (tested for version 2.6 with gcc 9.3 on linux platform, and version 2.7 on m
 
 # Compilation Guide
 A CMAKe file is provide.
-Compile by running first, to create the makefiles 
+Compile by running first
 ```
 cmake .
 ```
-Once that works run 
+ to create the makefiles.  Once that works run 
 ```
 make
 ```
-which should produce an executable `ctpstoch`.
+which should produce an executable `ctpstoch`. 
 
 
 # Running guide
