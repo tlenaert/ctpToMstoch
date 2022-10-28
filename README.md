@@ -7,6 +7,7 @@ The functions for producing each result are part of the main file, which needs t
 - [Repo Contents](#repo-contents)
 - [System Requirements](#system-requirements)
 - [Compilation Guide](#compilation-guide)
+- [Running Guide](#running-guide)
 - [Citation](#citation)
 # Repo Contents
 
@@ -43,5 +44,8 @@ Once that works run
 ```
 make
 ```
+
+# Running guide
+Once compiled, an executable `ctpstoch` is produced. When executed this will prodice for a ICG with L=4 the results for Beta=0.3 and epsilon = 0.18.
 
 
