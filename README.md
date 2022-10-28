@@ -18,17 +18,17 @@ All *.CPP and *.HPP files
 
 This code was built on a standard Macbook pro with 
 
-RAM: 8+ GB
-CPU: 4 cores, 2.4 GHz
+- RAM: 8+ GB
+- CPU: 4 cores, 2.4 GHz
 
 ## Software Requirements
 
 OS Requirements
 
 The package compilation was tested on OS X and Linux operating systems. 
-Linux: Ubuntu 16.04
-Mac OSX: 12.6 
-Windows:
+- Linux: Ubuntu 16.04
+- Mac OSX: 12.6 
+- Windows:
 
 To compile you will need
 GSL (tested for version 2.6 with gcc 9.3 on linux platform, and version 2.7 on mac os X) 
