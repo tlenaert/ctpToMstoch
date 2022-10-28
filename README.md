@@ -26,17 +26,14 @@ This code was built on a standard Macbook pro with
 
 OS Requirements
 
-The package compilation was tested on OS X and Linux operating systems. 
-- Linux: Ubuntu 16.04
-- Mac OSX: 12.6 
-- Windows:
+The package compilation was tested on OS X (laptop) and Unix (cluster) operating systems. 
 
 To compile you will need
-- GSL (tested for version 2.6 linux platform and version 2.7 on mac os X) 
-- GCC (tested with gcc-9.3 om linux platform and clang on mac os X)
+- GSL (tested for version 2.6 Unix platform and version 2.7 on mac os X) 
+- GCC (tested with gcc-9.3 om Unix platform and clang on mac os X)
 
 # Compilation Guide
-A CMAKE file is provide. Version 3.16.4 was used on the linux platform. 
+A CMAKE file is provide. Version 3.16.4 was used on the Unix platform. 
 Compile by running first
 ```
 cmake .
@@ -49,6 +46,34 @@ which should produce an executable `ctpstoch`.
 
 
 # Running guide
-When executing `ctpstoch` wihtou modifications in the `main.cpp`, the program will produce for an ICG with L=4 the results for β=0.3 and ε=0.18.
+When executing `ctpstoch` without modifications in the `main.cpp`, the program will produce for an ICG with L=4 the results for β=0.3 and ε=0.18.
+
+#Demo
+In `main.cpp` there are 5 parameters that can be set.These are
+- `length` The length of the ICG (default value is 4).
+- `first` The payoff player 1 gets in the first step (default value is 0.4).
+- `second` The payoff player 2 gets in the first step (default value is 0.1).
+- `factor` The growth of the resource at each step (default value is 2.0).
+- `levels` Reasoning levels of the individuals (default value is 4).
+- `maxlevel` Maximum reasoning level in the population (default value is 4).
+- `epsilon` Reasonig error for each indivisual (default value is 0.18).
+- `betas` Selection strength in the stochastic evolutionary dynamic (default value is 0.3).
+- `repeats` Number of repeats to calculate the fitness of each individual in the monte carlo sampling process (default value is 50000).
+- `psize` Population size (default value is 500).
+- `mut` Mutation probability (default value is 0.0).
+- `scaling` Tuning of difference in transitions between reasoning levels (default value is 1.0).
+- `cost` Cost associated with each additional reasoning level (default value is 0.0).
+
+
+In `main.cpp` there are 5 functions that provide the results need to reproduce the data in the figure:
+- `runAnalytical` : this function determines the stationary distributoin for a given β and ε. 
+- `runBeta` :
+- `runEpislon` : 
+- `runBoth` :
+- `runNetwork` :
+- `runGradient` :
+- `RunGradientEpsilon` : 
+
+
 
 
