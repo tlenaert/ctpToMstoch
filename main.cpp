@@ -274,17 +274,17 @@ int main(int argc, char * argv[]) {
     RanGen ran;
     
     // outputfiles, activat based on called function
-    string lfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctplevelsLall.txt");
-    string dfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpbeliefsLall.txt");
-    string sfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpstepsLall.txt");
-    string efname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctperrorLall.txt");
-    string decfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpdecisionLall.txt");
-    string levfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpldecperKLall.txt");
-    string mbfname ("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpmbperKLall.txt");
-    string belfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpltransitbeliefs.txt");
-    string nodefname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpnodes.txt");
-    string edgefname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpedges.txt");
-    string gradfname("/Users/tlenaert/Local/Research/Code/centipede/ctpbeliefstoch/results/ctpgradient.txt");
+    string lfname("./ctplevelsLall.txt");
+    string dfname("./ctpbeliefsLall.txt");
+    string sfname("./ctpstepsLall.txt");
+    string efname("./ctperrorLall.txt");
+    string decfname("./ctpdecisionLall.txt");
+    string levfname("./ctpldecperKLall.txt");
+    string mbfname ("./ctpmbperKLall.txt");
+    string belfname("./ctpltransitbeliefs.txt");
+    string nodefname("./ctpnodes.txt");
+    string edgefname("./ctpedges.txt");
+    string gradfname("./ctpgradient.txt");
     
     //create output files
     ofstream df(dfname);
