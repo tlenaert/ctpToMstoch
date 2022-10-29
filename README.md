@@ -12,16 +12,21 @@ The functions for producing each result are part of the main file, which needs t
 - [Citation](#citation)
 # Repo Contents
 
-All *.CPP and *.HPP files 
+All *.CPP and *.HPP files:
+- `rangen.h/rangen.cpp`
+- `ctpgame.hpp/ctpgame.cpp`
+- `ctpdata.hpp/ctpdata.cpp`
+- `strategy.hpp/strategy.cpp`
+- `kernel.hpp/kernel.cpp`
+- `main.cpp`
 
 # System Requirements
 
 ## Hardware Requirements
 
-This code was built on a standard Macbook pro with 
-
-- RAM: 8+ GB
-- CPU: 4 cores, 2.4 GHz
+This code was built on a standard Macbook pro (Monterey 12.6) with 
+- RAM: 8 GB
+- CPU: 2.4 GHz Quad-Core Intel Core i5
 
 ## Software Requirements
 
@@ -31,7 +36,7 @@ The package compilation was tested on OS X (laptop) and Unix (cluster) operating
 
 To compile you will need
 - GSL (tested for version 2.6 Unix platform and version 2.7 on mac os X) 
-- GCC (tested with gcc-9.3 om Unix platform and clang on mac os X)
+- GCC (version gcc-9.3) on Unix platform and clang on Mac os X.
 
 # Compilation Guide
 A CMAKE file is provide. Version 3.16.4 was used on the Unix platform. 
@@ -65,7 +70,7 @@ In `main.cpp` there are 13 parameters that can be set.These are
 - `cost` Cost associated with each additional reasoning level (default value is 0.0).
 
 
-In `main.cpp` there are 5 functions that provide the results need to reproduce the data in the figure:
+In `main.cpp` there are 7 functions that provide the results need to reproduce the data in the figure:
 - `runAnalytical` : this function determines the stationary distribution and other data for a given β and ε (see Figure 2 for instance). 
 - `runBeta` : this function determines the stationary distribution and other data for a β within a range and a fixed ε. 
 - `runEpislon` : this function determines the stationary distribution and other data for a given β and a range of ε values.
