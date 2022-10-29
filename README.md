@@ -36,7 +36,7 @@ The package compilation was tested on OS X (laptop) and Unix (cluster) operating
 
 To compile you will need
 - GSL (tested for version 2.6 Unix platform and version 2.7 on mac os X) 
-- GCC (tested with gcc-9.3 om Unix platform and clang on mac os X)
+- GCC (version gcc-9.3) on Unix platform and clang on Mac os X.
 
 # Compilation Guide
 A CMAKE file is provide. Version 3.16.4 was used on the Unix platform. 
