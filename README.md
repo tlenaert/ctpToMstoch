@@ -12,7 +12,13 @@ The functions for producing each result are part of the main file, which needs t
 - [Citation](#citation)
 # Repo Contents
 
-All *.CPP and *.HPP files 
+All *.CPP and *.HPP files:
+- `rangen.h/rangen.cpp`
+- `ctpgame.hpp/ctpgame.cpp`
+- `ctpdata.hpp/ctpdata.cpp`
+- `strategy.hpp/strategy.cpp`
+- `kernel.hpp/kernel.cpp`
+- `main.cpp`
 
 # System Requirements
 
