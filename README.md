@@ -24,10 +24,9 @@ All *.CPP and *.HPP files:
 
 ## Hardware Requirements
 
-This code was built on a standard Macbook pro with 
-
-- RAM: 8+ GB
-- CPU: 4 cores, 2.4 GHz
+This code was built on a standard Macbook pro (Monterey 12.6) with 
+- RAM: 8 GB
+- CPU: 2.4 GHz Quad-Core Intel Core i5
 
 ## Software Requirements
 
