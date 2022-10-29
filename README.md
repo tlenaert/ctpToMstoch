@@ -70,7 +70,7 @@ In `main.cpp` there are 13 parameters that can be set.These are
 - `cost` Cost associated with each additional reasoning level (default value is 0.0).
 
 
-In `main.cpp` there are 5 functions that provide the results need to reproduce the data in the figure:
+In `main.cpp` there are 7 functions that provide the results need to reproduce the data in the figure:
 - `runAnalytical` : this function determines the stationary distribution and other data for a given β and ε (see Figure 2 for instance). 
 - `runBeta` : this function determines the stationary distribution and other data for a β within a range and a fixed ε. 
 - `runEpislon` : this function determines the stationary distribution and other data for a given β and a range of ε values.
