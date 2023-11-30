@@ -52,37 +52,38 @@ which should produce an executable `ctpstoch`.
 
 
 # Demo
-When executing `ctpstoch` without modifications in the `main.cpp`, the program will produce for an ICG with L=4 the results for β=0.3 and ε=0.18.
+When executing `ctpstoch` without modifications in the `main.cpp`, the program will produce for an ICG with L=4 the results for β=0.31 and ε=0.19. Changes to the parameters will produce also the L=6 results.
 
-In `main.cpp` there are 13 parameters that can be set.These are
+In `main.cpp` there are 13 parameters that can be set.  These are
 - `length` The length of the ICG (default value is 4).
 - `first` The payoff player 1 gets in the first step (default value is 0.4).
 - `second` The payoff player 2 gets in the first step (default value is 0.1).
 - `factor` The growth of the resource at each step (default value is 2.0).
 - `levels` Reasoning levels of the individuals (default value is 4).
 - `maxlevel` Maximum reasoning level in the population (default value is 4).
-- `epsilon` Reasonig error for each indivisual (default value is 0.18).
+- `epsilon` Reasoning error for each individual (default value is 0.18).
 - `betas` Selection strength in the stochastic evolutionary dynamic (default value is 0.3).
-- `repeats` Number of repeats to calculate the fitness of each individual in the monte carlo sampling process (default value is 50000).
+- `repeats` Number of repeats to calculate the fitness of each individual in the Monte Carlo sampling process (default value is 50000).
 - `psize` Population size (default value is 500).
 - `mut` Mutation probability (default value is 0.0).
 - `scaling` Tuning of difference in transitions between reasoning levels (default value is 1.0).
 - `cost` Cost associated with each additional reasoning level (default value is 0.0).
+- `approach` type of reasoning process; 0)inertia, 1)payoff conditional and 2) unconditional
 
 
-In `main.cpp` there are 7 functions that provide the results need to reproduce the data in the figure:
+In `main.cpp` there are 7 functions that provide the results needed to reproduce the data in the figures:
 - `runAnalytical` : this function determines the stationary distribution and other data for a given β and ε (see Figure 2 for instance). 
 - `runBeta` : this function determines the stationary distribution and other data for a β within a range and a fixed ε. 
 - `runEpislon` : this function determines the stationary distribution and other data for a given β and a range of ε values.
 - `runBoth` : this function determines for a range of β- and ε-values the RMSD with the experimental data and average belief, reasoning, action and misbelief results (see Figure 1A for instance).
 - `runNetwork` : this function generates the networks as visualized in Extended Data Figure 5.
 - `runGradient` : this function produces the gradient of selection for specific values of  β and ε.
-- `RunGradientEpsilon` : this function produces multiple gradient of selections for different ε-values.
+- `RunGradientEpsilon` : this function produces multiple gradients of selections for different ε-values.
 
 # Output 
 The raw output files as well as the R files needed to reproduce the figures can be found in the folder `results`.
 
-The R-scripts can simply be excuted in the same folder as the raw data files.
+The R-scripts can simply be executed in the same folder as the raw data files.
 
 # Citation
 
