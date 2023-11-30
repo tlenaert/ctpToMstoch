@@ -32,19 +32,6 @@ long double Kernel::fermiFunction(bool sign_beta, long double first, long double
     return result;
 }
 
-//double Kernel::calcAvgPayoff(Strategy* first, Strategy* second, double eps, unsigned repeats, RanGen* ran){
-//    double stochpayoff(0);
-//    for(unsigned i=0; i<repeats; i++){
-//        first->stochasticInferDecision(&_game, eps, ran);
-//        second->stochasticInferDecision(&_game, eps, ran);
-////        cout << *first << "\t" << *second << "\t";
-//        double tmp = _game.payoff(first->decisionR1(), first->decisionR2(), second->decisionR1(), second->decisionR2());
-////        cout << tmp << endl;
-//        stochpayoff += tmp;
-//    }
-//    stochpayoff /=  double(repeats);
-//    return stochpayoff;
-//}
 
 bool Kernel::generateSingleMixedStrategy(Strategy* s, unsigned role, unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach){
     
@@ -104,45 +91,7 @@ bool Kernel::generateMixedStrategies(StrategySpace* strategies, unsigned steps, 
 
     return true;
 }
-//
-//bool Kernel::generateMixedStrategies2(StrategySpace* strategies, unsigned steps, double eps, unsigned repeats, RanGen* ran, double probcorr){
-//    if(_mixed!= NULL){
-//        gsl_matrix_free(_mixed);
-//    }
-//    unsigned row_length = steps + 2;
-//    _mixed = gsl_matrix_calloc(strategies->size(), row_length); //locations 0-(steps/2) for role 1 and (steps/2)-end for role two
-//    gsl_matrix_set_zero(_mixed);
-//    for(unsigned i =0; i < strategies->size(); i++){
-//        Strategy* s = (*strategies)[i];
-//
-//        for(unsigned j=0; j<repeats; j++){
-//            if(ran->randouble()>probcorr){
-//                //T is determined before the calculation of the payoff
-//                s->stochasticInferAdjustedDecision(&_game, eps, ran);
-//            }
-//            else {
-//                //T is not calculated before the calculation of the payoff
-//                s->stochasticInferDecisionWithInertia(&_game, eps, ran);
-//            }
-//            unsigned loc_role1 = (s->decisionR1()/2); //even >> locations 0 to row_length/2
-//            unsigned loc_role2 = (row_length/2)+(s->decisionR2()/2); //odd >> locations row_length/2 to end
-//            gsl_matrix_set(_mixed, i, loc_role1, gsl_matrix_get(_mixed, i, loc_role1)+1);
-//            gsl_matrix_set(_mixed, i, loc_role2, gsl_matrix_get(_mixed, i, loc_role2)+1);
-//        }
-//    }
-//    gsl_matrix_scale(_mixed, 1.0/(double)repeats); // scale every elemenbt by 1/repeats, producing a probability distribution
-//
-//    for(unsigned i =0; i < strategies->size(); i++){
-//        vector<double> mixed;
-//        Strategy* s = (*strategies)[i];
-//        for(unsigned j=0; j < row_length; j++){
-//            mixed.push_back(gsl_matrix_get(_mixed, i, j));
-//        }
-//        s->setMixed(mixed);
-//    }
-//
-//    return true;
-//}
+
 
 void Kernel::inferWithApproach(Strategy* first, Strategy* second, double eps, RanGen* ran, unsigned approach){
     if(approach==0){

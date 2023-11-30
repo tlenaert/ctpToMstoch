@@ -91,7 +91,6 @@ public:
     long double gradient(StrategySpace* strats, Strategy* inv_action, unsigned num_inv, double beta, double mut);
     bool generateMixedStrategies(StrategySpace* strategies,unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
     bool generateSingleMixedStrategy(Strategy* s, unsigned role, unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach);
-//    bool generateMixedStrategies2(StrategySpace* strategies,unsigned steps, double eps, unsigned repeats, RanGen* ran, double probcorr);
 
     friend ostream & operator<<(ostream &o, Kernel& k){return k.displayStationary(o);}
 

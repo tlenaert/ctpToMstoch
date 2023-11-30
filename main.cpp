@@ -68,63 +68,6 @@ bool runNetwork(unsigned approach, unsigned psize, double cost, unsigned levels,
     return true;
 }
 
-void generateMixedStrategies(unsigned approach, unsigned psize, unsigned levels, unsigned maxlevel, double eps, unsigned repeats, CtpGame& game, RanGen& ran, ofstream& of){
-    
-    StrategySpace strategies;
-    strategies.createSymmetricUTStrategies(game, levels, maxlevel);
-//    strategies.createEquilibriumStrategies(game); // only (1,0) and (5,3) for L=4
-
-    cout << strategies << endl;
-
-    high_resolution_clock::time_point start = high_resolution_clock::now();
-    Kernel run(psize, strategies.size(), game);
-    run.generateMixedStrategies(&strategies, levels, eps, repeats, &ran, approach);
-    
-    for(unsigned i=0; i < strategies.size(); i++){
-        Strategy* s = (strategies)[i];
-        vector<double> mixed = s->getMixed();
-        
-        of << *s << "-" << "D" << "\t";
-        for(unsigned j = 0; j < mixed.size(); j++){
-            of << mixed[j];
-            if (j < (mixed.size()-1))
-                of << "\t";
-        }
-        of<< endl;
-    }
-    
-    high_resolution_clock::time_point stop = high_resolution_clock::now();
-    duration<double> duration = duration_cast<microseconds>(stop - start);
-    cout << "Time taken by function: "
-         << duration.count() << " s" << endl;
-}
-
-void generateSingleMixedStrategy(unsigned approach, unsigned psize, unsigned levels, unsigned maxlevel, double eps, unsigned repeats, CtpGame& game, RanGen& ran, ofstream& of){
-    
-    Strategy test(2,2,2);
-    unsigned role=1;
-    cout << test << endl;
-
-    high_resolution_clock::time_point start = high_resolution_clock::now();
-    Kernel run(psize, 1, game);
-    run.generateSingleMixedStrategy(&test,1, levels, eps, repeats, &ran, approach);
-    
-    vector<double> mixed = test.getMixed();
-    
-    of << test << "\t";
-    for(unsigned j = 0; j < mixed.size(); j++){
-        of << mixed[j];
-        if (j < (mixed.size()-1))
-            of << "\t";
-    }
-    of<< endl;
-    
-    high_resolution_clock::time_point stop = high_resolution_clock::now();
-    duration<double> duration = duration_cast<microseconds>(stop - start);
-    cout << "Time taken by function: "
-         << duration.count() << " s" << endl;
-}
-
 
 void runAnalytical(unsigned approach, unsigned psize, double cost, unsigned levels, unsigned maxlevel, double betas, double mut, double eps, unsigned repeats, double scaling, CtpGame& game, RanGen& ran, CtpData& data, ofstream& of, ofstream& lf, ofstream& sf, ofstream& ef, ofstream& df, ofstream& levf, ofstream& mbf){
     
@@ -411,8 +354,6 @@ int main(int argc, char * argv[]) {
 //    runGradient(approach, psize, betas, epsilon, mut, repeats, cost, game, ran, gf);
 //    runGradientEpsilon(approach, psize, betas, mut, repeats, cost, game, ran, gf);
 
-    //other functions
-//    generateSingleMixedStrategy(approach, psize, levels, maxlevel, epsilon, 100*repeats, game, ran, ms);
     errf.close();
     gf.close();
     lf.close();
