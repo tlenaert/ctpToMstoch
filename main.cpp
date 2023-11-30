@@ -325,66 +325,23 @@ void runGradientEpsilon(unsigned approach, unsigned psize, double beta, double m
     }
 }
 
-//void runGradientCorrelation(unsigned psize, double beta, double eps, double mut, unsigned repeats, double cost, CtpGame& game, RanGen& ran, ofstream& gf){
-//    //redo implementation of run.gradient as it now assumes that each action is present
-//    cout << "Beta =" << beta << endl;
-//    StrategySpace strategies;
-//    strategies.createEquilibriumStrategies(game);
-////    strategies.createSymmetricUTStrategies(game, 4, 4);
-//    Strategy neq(3,4,4);
-//
-//    vector<double> probcorr{0.0, 0.25, 0.5, 0.75, 1.0};
-//    unsigned num_lines = 5;
-//
-//    gsl_matrix *results =  gsl_matrix_alloc(psize+1, num_lines);
-//    gsl_matrix_set_zero(results);
-//
-//    unsigned count=0;
-//    for(double iter = 0; iter < num_lines; iter++){ // only look at the eps=0 and eps=0,18 case for now
-//        high_resolution_clock::time_point start = high_resolution_clock::now();
-//        Kernel run(psize, strategies.size(), game);
-//        run.calcPayoffs(&strategies, eps, repeats, &ran,cost,probcorr[iter]);
-//        for(unsigned i = 1; i < psize; i+=1){
-//            double grad = run.gradient(&strategies,&neq, i, beta, mut); //C=true
-//            gsl_matrix_set(results, i, count, grad);
-//        }
-//        run.execute(&strategies, beta, mut, 1.0);
-//        cout << probcorr[iter] << "\t" << run << endl;
-//
-//        high_resolution_clock::time_point stop = high_resolution_clock::now();
-//        duration<double> duration = duration_cast<microseconds>(stop - start);
-//        cout << "Time taken by function: "
-//             << duration.count() << " s" << endl;
-//        count +=1;
-//    }
-//    for(unsigned i=0; i <= psize; i++){
-//        gf << i << "\t";
-//        for(unsigned j=0; j < num_lines; j++){
-//            gf << gsl_matrix_get(results, i, j);
-//            if (j<(num_lines-1))
-//                gf << "\t";
-//        }
-//        gf << endl;
-//    }
-//}
 
 int main(int argc, char * argv[]) {
     // relevant variables to set
-    unsigned length = 6; // or 4
+    unsigned length = 4; // or 6
     double first = 0.4;
     double second = 0.1;
     double factor= 2.0;
-    unsigned levels = 6;// or 4
-    double epsilon=0.25; //0.25 for L=6
+    unsigned levels = 4;// or 6
+    double epsilon=0.19; //0.25 for L=6
     unsigned repeats=50000;
     unsigned psize = 500;
-    double betas=0.49; //0.49 for L=6
+    double betas=0.31; //0.49 for L=6
     double mut = 0.0;
-    unsigned maxlevel=6; // or 4
+    unsigned maxlevel=4; // or 6
     double scaling = 1.0;
     double cost = 0.0;
-//    double probcorr=1.0; //DEC=0 corresponds to probcorr=1.0
-    unsigned approach=0; //0 = conditional with intertia, 1= only conditional, 2= unconditional, 3= exact estimate of co-player beliefs (see inferWithApproach in kernel.cpp)
+    unsigned approach=0; //0 = conditional with intertia, 1= only conditional, 2= unconditional
 
     //Random number generator
     RanGen ran;
@@ -427,13 +384,6 @@ int main(int argc, char * argv[]) {
     //create incremental centipede game
     CtpGame game(first, second, factor, length);
     
-//    for (unsigned i=0; i <=length; ++i){
-//        for (unsigned j=0; j <=length; ++j){
-//            double payoff = game.payoff(i, i, j, j);
-//            cout << i << " vs. " << j << " = " << payoff << endl;
-//        }
-//    }
-    
     //data from McKelvey, R. D., & Palfrey, T. R. (1992). An experimental study of the centipede game. Econometrica: Journal of the Econometric Society, 803-836.
     CtpData data;
     CtpEntry MKP4avg(4, {0.071, 0.356, 0.370, 0.153, 0.049});
@@ -441,10 +391,6 @@ int main(int argc, char * argv[]) {
     CtpEntry MKP6avg(6, {0.007, 0.064, 0.199, 0.384, 0.253, 0.078, 0.014});
     data.add("MKP6avg", &MKP6avg);
 
-//    Strategy test(3,4,4);
-//    cout << test << endl;
-//    test.stochasticInferDecision(&game, 0.0, &ran);
-//    cout << test.decisionR1() << " and " << test.decisionR2() << endl;
 
     //Possible function (see above)
     
@@ -464,6 +410,8 @@ int main(int argc, char * argv[]) {
     //Functions producing the gradient of selection for one or multiple epsilon values, see Figure 3.
 //    runGradient(approach, psize, betas, epsilon, mut, repeats, cost, game, ran, gf);
 //    runGradientEpsilon(approach, psize, betas, mut, repeats, cost, game, ran, gf);
+
+    //other functions
 //    generateSingleMixedStrategy(approach, psize, levels, maxlevel, epsilon, 100*repeats, game, ran, ms);
     errf.close();
     gf.close();
