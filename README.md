@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/556244409.svg)](https://zenodo.org/doi/10.5281/zenodo.10230141)
 # ctpToMstoch
 This C++ code was used to produce the small mutation limit results in the paper T. Lenaerts, M. Saponara, J.M. Pacheco and F.C. Santos (2023) Evolution of a theory of mind. 
 The functions for producing each result are part of the main file, which needs to be edited and recompiled for each result.
