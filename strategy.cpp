@@ -19,6 +19,10 @@ Strategy::Strategy(const Strategy& other){
     _belief2=other.beliefR2();
     _decision1=other.decisionR1();
     _decision2=other.decisionR2();
+    _prediction1=other.predictionR1();
+    _prediction2=other.predictionR2();
+    _mixed.clear();
+    _mixed = other.getMixed();
 }
 
 Strategy& Strategy::operator=(const Strategy& other){
@@ -27,6 +31,10 @@ Strategy& Strategy::operator=(const Strategy& other){
     _belief2=other.beliefR2();
     _decision1=other.decisionR1();
     _decision2=other.decisionR2();
+    _prediction1=other.predictionR1();
+    _prediction2=other.predictionR2();
+    _mixed.clear();
+    _mixed = other.getMixed();
     return *this;
 }
 
@@ -55,6 +63,12 @@ unsigned Strategy::decision(unsigned role) const{
     return _decision2;
 }
 
+unsigned Strategy::prediction(unsigned role) const{
+    if(role==1)
+        return _prediction1;
+    return _prediction2;
+}
+
 bool Strategy::setBelief(unsigned role, unsigned value){
     if(role==1){
         _belief1 = value;
@@ -79,15 +93,49 @@ bool Strategy::setDecision(unsigned role, unsigned value){
     return false;
 }
 
-bool Strategy::inferR2Decision(CtpGame* game, unsigned& R1, unsigned& R2){
+bool Strategy::setPrediction(unsigned role, unsigned value){
+    if(role==1){
+        _prediction1 = value;
+        return true;
+    }
+    else if(role==2){
+        _prediction2 = value;
+        return true;
+    }
+    return false;
+}
+
+bool Strategy::inferR1AdjustedDecision(CtpGame* game, unsigned& R1, unsigned& R2){
+    unsigned tmpR2 =((R2 < game->length() && R2%2==0)?R2+1:R2);
+    double R2pi = game->payoff(tmpR2, true);
+    double R2pi_alt = game->payoff(tmpR2-1, true);
+    if(R2pi_alt > R2pi && tmpR2 > 0)
+       R1=tmpR2-1;
+    else R1 = tmpR2; // no memory
+    return true;
+}
+
+bool Strategy::inferR2AdjustedDecision(CtpGame* game, unsigned& R1, unsigned& R2){
+    unsigned tmpR1 = ((R1%2!=0 && R1 < game->length())?R1+1:R1);
+    double R1pi = game->payoff(tmpR1, false);
+    double R1pi_alt = game->payoff(tmpR1-1, false); // what do de when R1 is 0 ? not chnage R2
+    if(R1pi_alt > R1pi && tmpR1 > 0)
+       R2=tmpR1-1;
+    else R2 = tmpR1; //no memory
+    return true;
+}
+
+
+bool Strategy::inferR2DecisionWithInertia(CtpGame* game, unsigned& R1, unsigned& R2){
     double R1pi = game->payoff(R1, false);
     double R1pi_alt = game->payoff(R1-1, false); // what do de when R1 is 0 ? not chnage R2
     if(R1pi_alt > R1pi && R1 > 0)
        R2=R1-1;
-    return true;
+   return true;
 }
 
-bool Strategy::inferR1Decision(CtpGame* game, unsigned& R1, unsigned& R2){
+
+bool Strategy::inferR1DecisionWithInertia(CtpGame* game, unsigned& R1, unsigned& R2){
     double R2pi = game->payoff(R2, true);
     double R2pi_alt = game->payoff(R2-1, true);
     if(R2pi_alt > R2pi && R2 > 0)
@@ -95,20 +143,64 @@ bool Strategy::inferR1Decision(CtpGame* game, unsigned& R1, unsigned& R2){
     return true;
 }
 
+bool Strategy::inferR2DecisionConditional(CtpGame* game, unsigned& R1, unsigned& R2){
+    double R1pi = game->payoff(R1, false);
+    double R1pi_alt = game->payoff(R1-1, false); // what do de when R1 is 0 ? not chnage R2
+    if(R1pi_alt > R1pi && R1 > 0)
+       R2=R1-1;
+    else R2=R1; //no inertia
+   return true;
+}
 
-bool Strategy::inferDecision(CtpGame* game){
-    unsigned tmpR1=_belief1;
-    unsigned tmpR2=_belief2;
-    firstOpportunity(tmpR1, tmpR2, game->length());
-    unsigned level=0;
-    while(level < _level){
-        unsigned testR1(tmpR1);
-        inferR1Decision(game, tmpR1, tmpR2); //modifies tempR1
-        inferR2Decision(game, testR1, tmpR2); // modifies tempR2
-        level+=1;
-    }
-    _decision2=tmpR2;
-    _decision1=tmpR1;
+
+bool Strategy::inferR1DecisionPayoffLevel(CtpGame* game, unsigned& R1, unsigned& R2){
+    double R2pi = game->payoff(R2, true);
+    double R2pi_alt = game->payoff(R2-1, true);
+    double currpi = game->payoff(predictionR1(), true);
+    if(R2pi > currpi)
+        R1=R2;
+    if(R2pi_alt > R2pi && R2 > 0)
+        R1=R2-1;
+    return true;
+}
+
+bool Strategy::inferR2DecisionPayoffLevel(CtpGame* game, unsigned& R1, unsigned& R2){
+    double R1pi = game->payoff(R1, false);
+    double R1pi_alt = game->payoff(R1-1, false); // what do de when R1 is 0 ? not chnage R2
+    double currpi = game->payoff(predictionR2(), true);
+    if(R1pi > currpi)
+        R2=R1;
+    if(R1pi_alt > R1pi && R1 > 0)
+       R2=R1-1;
+   return true;
+}
+
+
+bool Strategy::inferR1DecisionConditional(CtpGame* game, unsigned& R1, unsigned& R2){
+    double R2pi = game->payoff(R2, true);
+    double R2pi_alt = game->payoff(R2-1, true);
+    if(R2pi_alt > R2pi && R2 > 0)
+       R1=R2-1;
+    else R1=R2; // no inertia
+    return true;
+}
+
+bool Strategy::inferR1DecisionUnconditional(CtpGame* game, unsigned& R1, unsigned& R2){
+    if(R2 > 0)
+       R1=R2-1;
+    else R1=0;
+    return true;
+}
+
+bool Strategy::inferR2DecisionUnconditional(CtpGame* game, unsigned& R1, unsigned& R2){
+    if(R1 > 0)
+       R2=R1-1;
+    else R2=0;
+    return true;
+}
+bool Strategy::inferK0Decision(CtpGame* game){
+    _decision2=_belief2;
+    _decision1=_belief1;
     return true;
 }
 
@@ -133,27 +225,227 @@ bool Strategy::firstOpportunity(unsigned& dec1, unsigned& dec2, unsigned length)
     return true;
 }
 
-bool Strategy::stochasticInferDecision(CtpGame* game, double epsilon, RanGen* ran){
+bool Strategy::stochasticInferDecisionConditional(CtpGame* game, double epsilon, RanGen* ran){//the decions for R1 and R2 are correlated
     unsigned tmpR1=_belief1;
     unsigned tmpR2=_belief2;
-    firstOpportunity(tmpR1, tmpR2, game->length());
+//    firstOpportunity(tmpR1, tmpR2, game->length());
+//    cout << tmpR1 << " and " << tmpR2 << endl;
+    setPredictionR1(tmpR1);
+    setPredictionR2(tmpR2);
     unsigned level=0;
     while(level < _level){
         unsigned testR1(tmpR1);
-        inferR1Decision(game, tmpR1, tmpR2); //modifies R1
+        inferR1DecisionConditional(game, tmpR1, tmpR2); //modifies R1
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
         //add noise to tempR1
         tmpR1 = addNoise(ran, game, tmpR1, epsilon);
-        inferR2Decision(game, testR1, tmpR2); // modifies R2
+       inferR2DecisionConditional(game, testR1, tmpR2); // modifies R2
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
         //add noise to tempR2
         tmpR2 = addNoise(ran, game, tmpR2, epsilon);
+//        firstOpportunity(tmpR1, tmpR2, game->length());
         level+=1;
+        if(level<(_level-1)){
+            setPredictionR1(tmpR1);
+            setPredictionR2(tmpR2);
+        }
     }
     _decision1=tmpR1;
     _decision2=tmpR2;
     firstOpportunity(_decision1, _decision2, game->length());
+    firstOpportunity(_prediction1, _prediction2, game->length());
+
+//    cout << " after :  " << _decision1 << " and " << _decision2 << endl;
     return true;
 }
 
+bool Strategy::stochasticInferDecisionPayoffLevel(CtpGame* game, double epsilon, RanGen* ran){
+    unsigned tmpR1=_belief1;
+    unsigned tmpR2=_belief2;
+//    firstOpportunity(tmpR1, tmpR2, game->length());
+//    cout << tmpR1 << " and " << tmpR2 << endl;
+    setPredictionR1(tmpR1);
+    setPredictionR2(tmpR2);
+    unsigned level=0;
+    while(level < _level){
+        unsigned testR1(tmpR1);
+        inferR1DecisionPayoffLevel(game, tmpR1, tmpR2); //modifies R1
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR1
+        tmpR1 = addNoise(ran, game, tmpR1, epsilon);
+        inferR2DecisionPayoffLevel(game, testR1, tmpR2); // modifies R2
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR2
+        tmpR2 = addNoise(ran, game, tmpR2, epsilon);
+//        firstOpportunity(tmpR1, tmpR2, game->length());
+        level+=1;
+        if(level<(_level-1)){
+            setPredictionR1(tmpR1);
+            setPredictionR2(tmpR2);
+        }
+    }
+    _decision1=tmpR1;
+    _decision2=tmpR2;
+    firstOpportunity(_decision1, _decision2, game->length());
+    firstOpportunity(_prediction1, _prediction2, game->length());
+
+//    cout << " after :  " << _decision1 << " and " << _decision2 << endl;
+    return true;
+}
+
+bool Strategy::stochasticInferDecisionWithExactBeliefs(CtpGame* game, unsigned other, double epsilon, RanGen* ran){
+    unsigned tmpR1=other;
+    unsigned tmpR2=other;
+//    firstOpportunity(tmpR1, tmpR2, game->length());
+//    cout << tmpR1 << " and " << tmpR2 << endl;
+    setPredictionR1(tmpR1);
+    setPredictionR2(tmpR2);
+    unsigned level=0;
+    while(level < _level){
+        unsigned testR1(tmpR1);
+        inferR1DecisionWithInertia(game, tmpR1, tmpR2); //modifies R1
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR1
+        tmpR1 = addNoise(ran, game, tmpR1, epsilon);
+        inferR2DecisionWithInertia(game, testR1, tmpR2); // modifies R2
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR2
+        tmpR2 = addNoise(ran, game, tmpR2, epsilon);
+//        firstOpportunity(tmpR1, tmpR2, game->length());
+        level+=1;
+        if(level<(_level-1)){
+            setPredictionR1(tmpR1);
+            setPredictionR2(tmpR2);
+        }
+    }
+    _decision1=tmpR1;
+    _decision2=tmpR2;
+    firstOpportunity(_decision1, _decision2, game->length());
+    firstOpportunity(_prediction1, _prediction2, game->length());
+
+//    cout << " after :  " << _decision1 << " and " << _decision2 << endl;
+    return true;
+}
+
+bool Strategy::stochasticInferDecisionWithInertia(CtpGame* game, double epsilon, RanGen* ran){//the decions for R1 and R2 are correlated
+    unsigned tmpR1=_belief1;
+    unsigned tmpR2=_belief2;
+//    firstOpportunity(tmpR1, tmpR2, game->length());
+//    cout << tmpR1 << " and " << tmpR2 << endl;
+    setPredictionR1(tmpR1);
+    setPredictionR2(tmpR2);
+    unsigned level=0;
+    while(level < _level){
+        unsigned testR1(tmpR1);
+        inferR1DecisionWithInertia(game, tmpR1, tmpR2); //modifies R1
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR1
+        tmpR1 = addNoise(ran, game, tmpR1, epsilon);
+        inferR2DecisionWithInertia(game, testR1, tmpR2); // modifies R2
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR2
+        tmpR2 = addNoise(ran, game, tmpR2, epsilon);
+//        firstOpportunity(tmpR1, tmpR2, game->length());
+        level+=1;
+        if(level<(_level-1)){
+            setPredictionR1(tmpR1);
+            setPredictionR2(tmpR2);
+        }
+    }
+    _decision1=tmpR1;
+    _decision2=tmpR2;
+    firstOpportunity(_decision1, _decision2, game->length());
+    firstOpportunity(_prediction1, _prediction2, game->length());
+
+//    cout << " after :  " << _decision1 << " and " << _decision2 << endl;
+    return true;
+}
+
+bool Strategy::stochasticInferAdjustedDecision(CtpGame* game, double epsilon, RanGen* ran){//the decions for R1 and R2 are correlated
+    unsigned tmpR1=_belief1;
+    unsigned tmpR2=_belief2;
+//    firstOpportunity(tmpR1, tmpR2, game->length());
+//    cout << tmpR1 << " and " << tmpR2 << endl;
+    setPredictionR1(tmpR1);
+    setPredictionR2(tmpR2);
+    unsigned level=0;
+    while(level < _level){
+        unsigned testR1(tmpR1);
+        inferR1AdjustedDecision(game, tmpR1, tmpR2); //modifies R1
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR1
+        tmpR1 = addNoise(ran, game, tmpR1, epsilon);
+        inferR2AdjustedDecision(game, testR1, tmpR2); // modifies R2
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR2
+        tmpR2 = addNoise(ran, game, tmpR2, epsilon);
+//        firstOpportunity(tmpR1, tmpR2, game->length());
+        level+=1;
+        if(level<(_level-1)){
+            setPredictionR1(tmpR1);
+            setPredictionR2(tmpR2);
+        }
+    }
+    _decision1=tmpR1;
+    _decision2=tmpR2;
+    firstOpportunity(_decision1, _decision2, game->length());
+    firstOpportunity(_prediction1, _prediction2, game->length());
+
+//    cout << " after :  " << _decision1 << " and " << _decision2 << endl;
+    return true;
+}
+
+
+
+bool Strategy::stochasticInferDecisionUnconditional(CtpGame* game, double epsilon, RanGen* ran){//the decions for R1 and R2 are correlated
+    unsigned tmpR1=_belief1;
+    unsigned tmpR2=_belief2;
+//    firstOpportunity(tmpR1, tmpR2, game->length());
+//    cout << tmpR1 << " and " << tmpR2 << endl;
+    setPredictionR1(tmpR1);
+    setPredictionR2(tmpR2);
+    unsigned level=0;
+    while(level < _level){
+        unsigned testR1(tmpR1);
+        inferR1DecisionUnconditional(game, tmpR1, tmpR2); //modifies R1
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR1
+        tmpR1 = addNoise(ran, game, tmpR1, epsilon);
+        inferR2DecisionUnconditional(game, testR1, tmpR2); // modifies R2
+//        cout << level << " : " << tmpR1 << " and " << tmpR2 << endl;
+        //add noise to tempR2
+        tmpR2 = addNoise(ran, game, tmpR2, epsilon);
+        level+=1;
+        if(level<(_level-1)){
+            setPredictionR1(tmpR1);
+            setPredictionR2(tmpR2);
+        }
+    }
+    _decision1=tmpR1;
+    _decision2=tmpR2;
+    firstOpportunity(_decision1, _decision2, game->length());
+    firstOpportunity(_prediction1, _prediction2, game->length());
+//    cout << " after :  " << _decision1 << " and " << _decision2 << endl;
+    return true;
+}
+
+bool Strategy::setMixed(vector<double>& data){
+    _mixed.clear();
+    for(unsigned i=0; i < data.size(); i++){
+        _mixed.push_back(data[i]);
+    }
+    return true;
+}
+
+bool Strategy::matchPrediction(Strategy& other){
+    return (_prediction1 == other.decisionR1() && _prediction2 == other.decisionR2());
+}
+
+int Strategy::differencePrediction(Strategy& other){
+    int tmp = abs((int)(_prediction1 - other.decisionR1()));
+    tmp += abs((int)(_prediction2 - other.decisionR2()));
+    return tmp;
+}
 
 
 ///StrategySpace methods
@@ -163,7 +455,7 @@ bool StrategySpace::createRandNowakStrategies(CtpGame& game, unsigned levels){
         for(unsigned i = 0; i <= (levels); i++){
             for(unsigned j = 0; j <= (levels); j++){
                 Strategy *elm = new Strategy(0, i, j);
-                elm->inferDecision(&game);
+                elm->inferK0Decision(&game);
                 _space.push_back(elm);
             }
         }
@@ -178,7 +470,7 @@ bool StrategySpace::createSubRandNowakStrategies(CtpGame& game, unsigned levels)
         for(unsigned i = 0; i <= (levels); i+=2){
             for(unsigned j = 0; j <= (levels); j+=2){
                 Strategy *elm = new Strategy(0, i, j);
-                elm->inferDecision(&game);
+                elm->inferK0Decision(&game);
                 _space.push_back(elm);
             }
         }
@@ -193,7 +485,7 @@ bool StrategySpace::createAltruistStrategies(CtpGame& game, unsigned levels){
         //all L0 strategies
         for(unsigned i = 0; i <= (levels); i++){
             Strategy *elm = new Strategy(i, levels, levels);
-            elm->inferDecision(&game);
+            elm->inferK0Decision(&game);
             _space.push_back(elm);
         }
         _cleared = false;
@@ -206,7 +498,7 @@ bool StrategySpace::createAllSymmetricStrategies(CtpGame& game, unsigned levels)
         for(unsigned i = 0; i <= (levels); i++){
             for(unsigned j = 0; j <= (levels); j++){
                 Strategy *elm = new Strategy(j, i, i);
-                elm->inferDecision(&game);
+                elm->inferK0Decision(&game);
                 _space.push_back(elm);
             }
         }
@@ -219,7 +511,7 @@ bool StrategySpace::createSymmetricStrategies(CtpGame& game, unsigned beliefs, u
     if(_cleared){
         for(unsigned i = 0; i <= (beliefs); i++){
             Strategy *elm = new Strategy(level, i, i);
-            elm->inferDecision(&game);
+            elm->inferK0Decision(&game);
             _space.push_back(elm);
         }
         _cleared = false;
@@ -232,7 +524,7 @@ bool StrategySpace::createSymmetricUTStrategies(CtpGame& game, unsigned beliefs,
         for(unsigned i = 0; i <= (beliefs); i++){
             for(unsigned j=0; j <=level; j++ ){
                 Strategy *elm = new Strategy(j, i, i);
-                elm->inferDecision(&game);
+                elm->inferK0Decision(&game);
                 _space.push_back(elm);
             }
         }
@@ -247,7 +539,7 @@ bool StrategySpace::createSymmetricReducedStrategies(CtpGame& game, unsigned bel
             Strategy* prev = NULL;
             for(unsigned j=0; j <=level; j++ ){
                 Strategy *elm = new Strategy(j, i, i);
-                elm->inferDecision(&game);
+                elm->inferK0Decision(&game);
                 if(prev == NULL){
                     prev = elm;
                     _space.push_back(elm);
@@ -270,7 +562,7 @@ bool StrategySpace::createNecessaryStrategies(CtpGame& game, unsigned levels){
             for(unsigned j = 0; j <= (levels); j+=2){
                 for(unsigned l = 0; l <= (levels); l++){
                     Strategy *elm = new Strategy(l, i, j);
-                    elm->inferDecision(&game);
+                    elm->inferK0Decision(&game);
                     _space.push_back(elm);
                 }
             }
@@ -288,7 +580,7 @@ bool StrategySpace::createRestrictedStrategies(CtpGame& game, unsigned levels){
                 Strategy* prev = NULL;
                 for(unsigned l = 0; l <= (levels); l++){
                     Strategy *elm = new Strategy(l, i, j);
-                    elm->inferDecision(&game);
+                    elm->inferK0Decision(&game);
                     if(prev == NULL){
                         prev = elm;
                         _space.push_back(elm);
@@ -308,10 +600,10 @@ bool StrategySpace::createRestrictedStrategies(CtpGame& game, unsigned levels){
 bool StrategySpace::createEquilibriumStrategies(CtpGame& game){
     if(_cleared){
         Strategy *sgp = new Strategy(0, 0, 0);
-        sgp->inferDecision(&game);
+        sgp->inferK0Decision(&game);
         _space.push_back(sgp);
         Strategy *neq = new Strategy(3, 4, 4);
-        neq->inferDecision(&game);
+        neq->inferK0Decision(&game);
         _space.push_back(neq);
         _cleared = false;
     }

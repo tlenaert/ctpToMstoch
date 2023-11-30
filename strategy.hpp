@@ -21,8 +21,14 @@ using namespace std;
 
 class Strategy {
 public:
-    Strategy():_level(0),_belief1(0), _belief2(0),_decision1(0), _decision2(0){};
-    Strategy(unsigned level, unsigned belf1, unsigned belf2):_level(level),_belief1(belf1), _belief2(belf2),_decision1(belf1), _decision2(belf2){};
+    Strategy():_level(0),_belief1(0), _belief2(0),_decision1(0), _decision2(0),_prediction1(0),_prediction2(0){
+        _mixed.clear();
+    };
+    Strategy(unsigned level, unsigned belf1, unsigned belf2):_level(level),_belief1(belf1), _belief2(belf2),_decision1(belf1), _decision2(belf2){
+        _mixed.clear();
+        _prediction1=belf1;
+        _prediction2=belf2;
+    };
     Strategy(const Strategy& other);
     Strategy& operator=(const Strategy& other);
 
@@ -36,24 +42,55 @@ public:
     bool setDecisionR1(unsigned value) {_decision1=value; return (_decision1 == value);}
     unsigned decisionR2() const {return _decision2;}
     bool setDecisionR2(unsigned value) {_decision2=value; return (_decision2 == value);}
+    unsigned predictionR1() const {return _prediction1;}
+    bool setPredictionR1(unsigned value) {_prediction1=value; return (_prediction1 == value);}
+    unsigned predictionR2() const {return _prediction2;}
+    bool setPredictionR2(unsigned value) {_prediction2=value; return (_prediction2 == value);}
 
     unsigned belief(unsigned role) const;
     bool setBelief(unsigned role, unsigned value);
     unsigned decision(unsigned role) const;
     bool setDecision(unsigned role, unsigned value);
+    unsigned prediction(unsigned role) const;
+    bool setPrediction(unsigned role, unsigned value);
 
-    bool inferDecision(CtpGame* game);
-    bool stochasticInferDecision(CtpGame* game, double epsilon, RanGen* ran);
+    bool inferK0Decision(CtpGame* game);
+    bool stochasticInferDecisionConditional(CtpGame* game, double epsilon, RanGen* ran);
+    bool stochasticInferDecisionWithInertia(CtpGame* game, double epsilon, RanGen* ran);
+    bool stochasticInferDecisionUnconditional(CtpGame* game, double epsilon, RanGen* ran);
+    bool stochasticInferDecisionPayoffLevel(CtpGame* game, double epsilon, RanGen* ran);
+    
+    
+    bool stochasticInferAdjustedDecision(CtpGame* game, double epsilon, RanGen* ran);
+    bool stochasticInferDecisionWithExactBeliefs(CtpGame* game,unsigned other, double epsilon, RanGen* ran);
 
+    
+    
     bool operator==(const Strategy& other) const;
     bool operator!=(const Strategy& other) const;
 
     friend ostream & operator<<(ostream &o, Strategy& s)  {return s.display(o);}
+    
+    bool setMixed(vector<double>& data);
+    vector<double> getMixed() const {return _mixed;}
+    
+    bool matchPrediction(Strategy& other);
+    int differencePrediction(Strategy& other);
 
 protected:
     virtual ostream& display(ostream& os) const ;
-    bool inferR1Decision(CtpGame* game, unsigned& R1, unsigned& R2);
-    bool inferR2Decision(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR1DecisionPayoffLevel(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR2DecisionPayoffLevel(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR1DecisionWithInertia(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR2DecisionWithInertia(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR1DecisionConditional(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR2DecisionConditional(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR1AdjustedDecision(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR2AdjustedDecision(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR1DecisionUnconditional(CtpGame* game, unsigned& R1, unsigned& R2);
+    bool inferR2DecisionUnconditional(CtpGame* game, unsigned& R1, unsigned& R2);
+
+
     int addNoise(RanGen* ran, CtpGame* game, int base, double epsilon);
     bool firstOpportunity(unsigned& dec1, unsigned& dec2, unsigned length);
 
@@ -64,6 +101,10 @@ protected:
     //after reasoning, whent take the money
     unsigned _decision1;
     unsigned _decision2;
+    unsigned _prediction1;
+    unsigned _prediction2;
+
+    vector<double> _mixed;
 };
 
 

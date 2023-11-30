@@ -32,45 +32,201 @@ long double Kernel::fermiFunction(bool sign_beta, long double first, long double
     return result;
 }
 
-double Kernel::calcAvgPayoff(Strategy* first, Strategy* second, double eps, unsigned repeats, RanGen* ran){
-    long double stochpayoff(0);
+//double Kernel::calcAvgPayoff(Strategy* first, Strategy* second, double eps, unsigned repeats, RanGen* ran){
+//    double stochpayoff(0);
+//    for(unsigned i=0; i<repeats; i++){
+//        first->stochasticInferDecision(&_game, eps, ran);
+//        second->stochasticInferDecision(&_game, eps, ran);
+////        cout << *first << "\t" << *second << "\t";
+//        double tmp = _game.payoff(first->decisionR1(), first->decisionR2(), second->decisionR1(), second->decisionR2());
+////        cout << tmp << endl;
+//        stochpayoff += tmp;
+//    }
+//    stochpayoff /=  double(repeats);
+//    return stochpayoff;
+//}
+
+bool Kernel::generateSingleMixedStrategy(Strategy* s, unsigned role, unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach){
+    
+    unsigned row_length = steps + 1;
+    vector<double> mixed(row_length,0.0);
+    
+    for(unsigned j=0; j<repeats; j++){
+        inferWithApproach(s,eps, ran, approach);
+        unsigned loc_role = s->decisionR1();
+        if(role == 2)
+            loc_role = s->decisionR2();
+        mixed[loc_role]+=1.0;
+    }
+    double sum = 0.0;
+    for(unsigned j=0; j < row_length; j++){
+        mixed[j] *= ( 1.0/(double)(repeats));
+        sum += mixed[j];
+        cout << "S" << j <<"\t" << mixed[j] << endl;
+    }
+    cout << "Strategy" << *s << " sum is " << FIXED_FLOAT(sum) << endl;
+    s->setMixed(mixed);
+    return true;
+}
+
+
+bool Kernel::generateMixedStrategies(StrategySpace* strategies, unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach){
+    if(_mixed!= NULL){
+        gsl_matrix_free(_mixed);
+    }
+    unsigned row_length = steps + 1;
+    _mixed = gsl_matrix_calloc(strategies->size(), row_length);
+    gsl_matrix_set_zero(_mixed);
+    for(unsigned i =0; i < strategies->size(); i++){
+        Strategy* s = (*strategies)[i];
+
+        for(unsigned j=0; j<repeats; j++){
+            inferWithApproach(s,eps, ran, approach);
+            unsigned loc_role1 = s->decisionR1();
+            unsigned loc_role2 = s->decisionR2();
+            gsl_matrix_set(_mixed, i, loc_role1, gsl_matrix_get(_mixed, i, loc_role1)+1);
+            gsl_matrix_set(_mixed, i, loc_role2, gsl_matrix_get(_mixed, i, loc_role2)+1);
+        }
+    }
+    gsl_matrix_scale(_mixed, 1.0/(double)(2.0*repeats)); // scale every elemenbt by 1/repeats, producing a probability distribution
+
+    for(unsigned i =0; i < strategies->size(); i++){
+        vector<double> mixed;
+        Strategy* s = (*strategies)[i];
+        double sum = 0.0;
+        for(unsigned j=0; j < row_length; j++){
+            mixed.push_back(gsl_matrix_get(_mixed, i, j));
+            sum += gsl_matrix_get(_mixed, i, j);
+        }
+        cout << "Strategy" << *s << " sum is " << FIXED_FLOAT(sum) << endl;
+        s->setMixed(mixed);
+    }
+
+    return true;
+}
+//
+//bool Kernel::generateMixedStrategies2(StrategySpace* strategies, unsigned steps, double eps, unsigned repeats, RanGen* ran, double probcorr){
+//    if(_mixed!= NULL){
+//        gsl_matrix_free(_mixed);
+//    }
+//    unsigned row_length = steps + 2;
+//    _mixed = gsl_matrix_calloc(strategies->size(), row_length); //locations 0-(steps/2) for role 1 and (steps/2)-end for role two
+//    gsl_matrix_set_zero(_mixed);
+//    for(unsigned i =0; i < strategies->size(); i++){
+//        Strategy* s = (*strategies)[i];
+//
+//        for(unsigned j=0; j<repeats; j++){
+//            if(ran->randouble()>probcorr){
+//                //T is determined before the calculation of the payoff
+//                s->stochasticInferAdjustedDecision(&_game, eps, ran);
+//            }
+//            else {
+//                //T is not calculated before the calculation of the payoff
+//                s->stochasticInferDecisionWithInertia(&_game, eps, ran);
+//            }
+//            unsigned loc_role1 = (s->decisionR1()/2); //even >> locations 0 to row_length/2
+//            unsigned loc_role2 = (row_length/2)+(s->decisionR2()/2); //odd >> locations row_length/2 to end
+//            gsl_matrix_set(_mixed, i, loc_role1, gsl_matrix_get(_mixed, i, loc_role1)+1);
+//            gsl_matrix_set(_mixed, i, loc_role2, gsl_matrix_get(_mixed, i, loc_role2)+1);
+//        }
+//    }
+//    gsl_matrix_scale(_mixed, 1.0/(double)repeats); // scale every elemenbt by 1/repeats, producing a probability distribution
+//
+//    for(unsigned i =0; i < strategies->size(); i++){
+//        vector<double> mixed;
+//        Strategy* s = (*strategies)[i];
+//        for(unsigned j=0; j < row_length; j++){
+//            mixed.push_back(gsl_matrix_get(_mixed, i, j));
+//        }
+//        s->setMixed(mixed);
+//    }
+//
+//    return true;
+//}
+
+void Kernel::inferWithApproach(Strategy* first, Strategy* second, double eps, RanGen* ran, unsigned approach){
+    if(approach==0){
+        first->stochasticInferDecisionWithInertia(&_game, eps, ran);
+        second->stochasticInferDecisionWithInertia(&_game, eps, ran);
+    }
+    else if(approach==1){
+        first->stochasticInferDecisionConditional(&_game, eps, ran);
+        second->stochasticInferDecisionConditional(&_game, eps, ran);
+    }
+    else if (approach==2){
+        first->stochasticInferDecisionUnconditional(&_game, eps, ran);
+        second->stochasticInferDecisionUnconditional(&_game, eps, ran);
+    }
+    else if (approach==3){//assume I can know exactly what the beliefs are of the co-player and reason
+        first->stochasticInferDecisionWithExactBeliefs(&_game, second->beliefR2(), eps, ran);
+        second->stochasticInferDecisionWithExactBeliefs(&_game, first->beliefR1(), eps, ran);
+    }
+}
+
+void Kernel::inferWithApproach(Strategy* strat, double eps, RanGen* ran, unsigned approach){
+    if(approach==0){
+        strat->stochasticInferDecisionWithInertia(&_game, eps, ran);
+    }
+    else if(approach==1){
+        strat->stochasticInferDecisionConditional(&_game, eps, ran);
+    }
+    else if (approach==2){
+        strat->stochasticInferDecisionUnconditional(&_game, eps, ran);
+    }
+    else if (approach==3){
+        strat->stochasticInferDecisionWithExactBeliefs(&_game,strat->beliefR1(), eps, ran); // symmetric beliefs
+    }
+}
+
+
+vector<double> Kernel::calcAvgPayoff(Strategy* first, Strategy* second, double eps, unsigned repeats, RanGen* ran, unsigned approach){
+    double stochpayoff(0);
+    double stochpredict(0);
     for(unsigned i=0; i<repeats; i++){
-        first->stochasticInferDecision(&_game, eps, ran);
-        second->stochasticInferDecision(&_game, eps, ran);
-//        cout << *first << "\t" << *second << "\t";
-        long double tmp = _game.payoff(first->decisionR1(), first->decisionR2(), second->decisionR1(), second->decisionR2());
+        inferWithApproach(first, second, eps, ran, approach);
+        stochpredict += (int)first->matchPrediction(*second);
+        double tmp = _game.payoff(first->decisionR1(), first->decisionR2(), second->decisionR1(), second->decisionR2());
 //        cout << tmp << endl;
         stochpayoff += tmp;
     }
     stochpayoff /=  double(repeats);
-    return stochpayoff;
+    stochpredict /= double(repeats);
+    vector<double> result;
+    result.push_back(stochpayoff);result.push_back(stochpredict);
+//    cout << *first << "\t " << *second << "\t "<< stochpredict << endl;
+    return result;
 }
 
-bool Kernel::calcPayoffs(StrategySpace* strategies,double eps, unsigned repeats, RanGen* ran, double cost){
+bool Kernel::calcPayoffs(StrategySpace* strategies,double eps, unsigned repeats, RanGen* ran, double cost, unsigned approach){
     if(_payoffs== NULL){
         _payoffs = gsl_matrix_calloc(_ssize, _ssize);
     }
     gsl_matrix_set_zero(_payoffs);
+    if(_predictions== NULL){
+        _predictions = gsl_matrix_calloc(_ssize, _ssize);
+    }
+    gsl_matrix_set_zero(_predictions);
     for(unsigned i =0; i < strategies->size(); i++){
         Strategy* one = (*strategies)[i];
         double lev = one->level();
         for(unsigned j =0; j < strategies->size(); j++){
             Strategy* two = (*strategies)[j];
-            long double payoff = calcAvgPayoff(one, two, eps, repeats,ran);
-            gsl_matrix_set(_payoffs, i, j, (payoff- (cost*lev)));
+            vector<double> result = calcAvgPayoff(one, two, eps, repeats,ran, approach);
+            gsl_matrix_set(_payoffs, i, j, (result[0] - (cost*lev)));
+            gsl_matrix_set(_predictions, i, j, result[1]);
         }
     }
-    printMatrix(_payoffs);
+//    printMatrix(_predictions);
     return true;
 }
 
 
 
-void Kernel::calcPairwiseFitness(unsigned num_inv, Strategy* res, Strategy* inv, long double& res_fit, long double& inv_fit,double eps, unsigned repeats, RanGen* ran){
-    long double avg_inv_inv = calcAvgPayoff(inv, inv, eps, repeats,ran);
-    long double avg_inv_res = calcAvgPayoff(inv, res, eps, repeats,ran);
-    long double avg_res_inv = calcAvgPayoff(res, inv, eps, repeats,ran);
-    long double avg_res_res = calcAvgPayoff(res, res, eps, repeats,ran);
+void Kernel::calcPairwiseFitness(unsigned num_inv, Strategy* res, Strategy* inv, long double& res_fit, long double& inv_fit,double eps, unsigned repeats, RanGen* ran, unsigned approach){
+    long double avg_inv_inv = (calcAvgPayoff(inv, inv, eps, repeats,ran, approach))[0];
+    long double avg_inv_res = (calcAvgPayoff(inv, res, eps, repeats,ran, approach))[0];
+    long double avg_res_inv = (calcAvgPayoff(res, inv, eps, repeats,ran, approach))[0];
+    long double avg_res_res = (calcAvgPayoff(res, res, eps, repeats,ran, approach))[0];
 
     inv_fit= ((num_inv-1) * avg_inv_inv + (_psize - num_inv)* avg_inv_res) /  double(_psize-1);
     res_fit= (num_inv * avg_res_inv + (_psize - num_inv - 1)* avg_res_res) /  double(_psize-1);
@@ -86,9 +242,9 @@ void Kernel::calcPairwiseFitness(unsigned num_inv, unsigned res, unsigned inv, l
     res_fit= (num_inv * avg_res_inv + (_psize - num_inv - 1)* avg_res_res) /  double(_psize-1);
 }
 
-void Kernel::probIncreaseDecrease(unsigned num_inv, Strategy* res, Strategy* inv, long double& increase, long double& decrease, double betas, double mut, double eps, unsigned repeats, RanGen* ran){
+void Kernel::probIncreaseDecrease(unsigned num_inv, Strategy* res, Strategy* inv, long double& increase, long double& decrease, double betas, double mut, double eps, unsigned repeats, RanGen* ran,unsigned approach){
     long double res_fit(0),inv_fit(0);
-    calcPairwiseFitness(num_inv, res, inv, res_fit, inv_fit, eps, repeats, ran);
+    calcPairwiseFitness(num_inv, res, inv, res_fit, inv_fit, eps, repeats, ran, approach);
     increase = (((_psize - num_inv)/double(_psize))*(num_inv/double(_psize))*fermiFunction(false, res_fit, inv_fit, betas))*(1.0 - mut);
     increase += mut*((_psize - num_inv)/double(_psize));
     decrease = (((_psize - num_inv)/double(_psize))*(num_inv/double(_psize))*fermiFunction(true, res_fit, inv_fit, betas))*(1.0 - mut);
@@ -105,13 +261,13 @@ void Kernel::probIncreaseDecrease(unsigned num_inv, unsigned res, unsigned inv, 
 }
 
 
-long double Kernel::fixationProbability(Strategy* res, Strategy* inv, double betas, double mut, double eps, unsigned repeats, RanGen* ran){
+long double Kernel::fixationProbability(Strategy* res, Strategy* inv, double betas, double mut, double eps, unsigned repeats, RanGen* ran, unsigned approach){
     long double result=0;
     for(unsigned i=0; i < _psize; i++ ){
         long double sub =1.0;
         for(unsigned j=1; j<(i+1) ; j++){
             long double increase(0),decrease(0);
-            probIncreaseDecrease(j, res, inv, increase, decrease, betas, mut, eps, repeats, ran);
+            probIncreaseDecrease(j, res, inv, increase, decrease, betas, mut, eps, repeats, ran,approach);
             sub *= (decrease/increase);
         }
         result += sub;
@@ -133,14 +289,14 @@ long double Kernel::fixationProbability(unsigned res, unsigned inv, double betas
     return (1.0/result); //clip((1.0/result),0.0, 1.0);
 }
 
-void Kernel::transitionMatrix(StrategySpace* strats, double betas, double mut, double eps, unsigned repeats, RanGen* ran, double scaling){
+void Kernel::transitionMatrix(StrategySpace* strats, double betas, double mut, double eps, unsigned repeats, RanGen* ran, double scaling, unsigned approach){
     for(unsigned i=0; i < _ssize ; i++){
         Strategy* res = (*strats)[i];
         double total=0;
         for(unsigned j=0 ; j < _ssize; j++){
             Strategy* inv = (*strats)[j];
             if(i != j){
-                long double fp= fixationProbability(res, inv, betas, mut, eps, repeats, ran);
+                long double fp= fixationProbability(res, inv, betas, mut, eps, repeats, ran, approach);
                 if(res->level() != inv->level()){
                     fp = fp*scaling; //reduce the prob imitation of levels
                 }
@@ -178,10 +334,10 @@ void Kernel::transitionMatrix(StrategySpace* strats, double betas, double mut, d
 }
 
 
-bool Kernel::execute(StrategySpace* strats, double betas,double mut, double eps, unsigned repeats, RanGen* ran,double scaling){
+bool Kernel::execute(StrategySpace* strats, double betas,double mut, double eps, unsigned repeats, RanGen* ran,double scaling, unsigned approach){
     if(initialize()){
         //Calculate fixation probabilities and the transition matrix
-        transitionMatrix(strats, betas, mut, eps, repeats, ran, scaling);
+        transitionMatrix(strats, betas, mut, eps, repeats, ran, scaling, approach);
         //Determine now the stationary distribution for the transition matrix
         createStationaryNSDistribution();
         return true;
@@ -209,7 +365,7 @@ void Kernel::showEvoRobustStrategies(StrategySpace* strats, double mult){
         Strategy* strat = (*strats)[i];
         bool is_robust=true;
         for(unsigned j=0 ; j < _ssize; j++){
-            if(i!=j && (gsl_matrix_get(_fprobs, i, j)/neutral) > 1.0){ // no outgoing links
+            if(i!=j && (gsl_matrix_get(_fprobs, i, j)/neutral) >= 1.0){ 
                 is_robust = false;
                 break;
             }
@@ -329,15 +485,18 @@ bool Kernel::createStationaryNSDistribution(){
     gsl_eigen_nonsymmv_sort (eval, evec, GSL_EIGEN_SORT_ABS_DESC);
 
     int best_pos = 0;
+    unsigned count = 0;
     for(unsigned i=0; i < _ssize; i++){
         double tmp =fabs(GSL_REAL(gsl_vector_complex_get(eval,i)) - 1.0);
         if (isEqual(tmp,0.0,10) ){
             cout << "Found :" << GSL_REAL(gsl_vector_complex_get(eval,i)) << endl;
+            count +=1;
             if(best_pos == -1)
                 best_pos=i;
-            break;
+            //break;
         }
     }
+    cout << "Found " << count << " matches to 1" << endl;
 
     gsl_vector_complex_view selected=gsl_matrix_complex_column(evec, best_pos);
     
@@ -368,6 +527,7 @@ std::ostream& Kernel::displayStationary(std::ostream& os) const {
     }
     return os;
 }
+
 
 
 bool Kernel::initialize(){
@@ -426,7 +586,7 @@ bool Kernel::levelKdistribution(StrategySpace* strats, double v1, unsigned level
     return true;
 }
 
-bool Kernel::decperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, RanGen* ran, ofstream& of){
+bool Kernel::decperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of){
     map<unsigned,vector<double>> results;
 
     for(unsigned i=0; i < strats->size();i++){
@@ -437,8 +597,7 @@ bool Kernel::decperkDistribution(StrategySpace* strats, double v1, unsigned leve
         for(unsigned j = 0; j < repeats; j++ ){
             Strategy first = *elm;
             Strategy second = *elm;
-            first.stochasticInferDecision(&_game, eps, ran);
-            second.stochasticInferDecision(&_game, eps, ran);
+            inferWithApproach(&first, &second, eps, ran, approach);
             unsigned whenp1=first.decisionR1();
             unsigned whenp2=second.decisionR2();
             map<unsigned,double>::iterator found;
@@ -484,7 +643,7 @@ bool Kernel::decperkDistribution(StrategySpace* strats, double v1, unsigned leve
     return true;
 }
 
-bool Kernel::misbeliefperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, RanGen* ran, ofstream& of){
+bool Kernel::misbeliefperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of){
     map<unsigned,vector<double>> results;
     unsigned size = ((2*levels)-1);
     unsigned middle = (unsigned)floor(size/2);
@@ -497,8 +656,7 @@ bool Kernel::misbeliefperkDistribution(StrategySpace* strats, double v1, unsigne
         for(unsigned j = 0; j < repeats; j++ ){
             Strategy first = *elm;
             Strategy second = *elm;
-            first.stochasticInferDecision(&_game, eps, ran);
-            second.stochasticInferDecision(&_game, eps, ran);
+            inferWithApproach(&first, &second, eps, ran, approach);
             unsigned whenp1=first.decisionR1();
             unsigned whenp2=second.decisionR2();
             map<unsigned,double>::iterator found;
@@ -552,7 +710,7 @@ bool Kernel::misbeliefperkDistribution(StrategySpace* strats, double v1, unsigne
     return true;
 }
 
-bool Kernel::decisionDistribution(StrategySpace* strats, double v1, double eps, unsigned repeats, RanGen* ran, ofstream& of){
+bool Kernel::decisionDistribution(StrategySpace* strats, double v1, double eps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of){
     map<unsigned,double> results;
     //first make all possible decisions.
     for(unsigned i=0; i < (_game.length()+1); i++){
@@ -564,8 +722,7 @@ bool Kernel::decisionDistribution(StrategySpace* strats, double v1, double eps, 
         for(unsigned j = 0; j < repeats; j++ ){
             Strategy first = *elm;
             Strategy second = *elm;
-            first.stochasticInferDecision(&_game, eps, ran);
-            second.stochasticInferDecision(&_game, eps, ran);
+            inferWithApproach(&first, &second, eps, ran, approach);
             unsigned whenp1=first.decisionR1();
             unsigned whenp2=second.decisionR2();
             map<unsigned,double>::iterator found;
@@ -672,7 +829,7 @@ double Kernel::averageLevel(StrategySpace* strats){
     return total;
 }
 
-double Kernel::averageDecision(StrategySpace* strats, unsigned repeats, double eps, RanGen* ran){
+double Kernel::averageDecision(StrategySpace* strats, unsigned repeats, double eps, RanGen* ran, unsigned approach){
     vector<double> results (_game.length()+1,0.0) ;
     for(unsigned i=0; i < strats->size();i++){
         double tmp = gsl_vector_get(_stationary, i);
@@ -680,8 +837,7 @@ double Kernel::averageDecision(StrategySpace* strats, unsigned repeats, double e
         for(unsigned j = 0; j < repeats; j++ ){
             Strategy first = *elm;
             Strategy second = *elm;
-            first.stochasticInferDecision(&_game, eps, ran);
-            second.stochasticInferDecision(&_game, eps, ran);
+            inferWithApproach(&first, &second, eps, ran, approach);
             unsigned whenp1=first.decisionR1();
             unsigned whenp2=second.decisionR2();
             if(whenp1 <= whenp2)
@@ -698,7 +854,7 @@ double Kernel::averageDecision(StrategySpace* strats, unsigned repeats, double e
 }
 
 
-bool Kernel::stepsdistribution(StrategySpace* strats, double v1, double eps, unsigned steps, unsigned repeats, RanGen* ran, ofstream& of){
+bool Kernel::stepsdistribution(StrategySpace* strats, double v1, double eps, unsigned steps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of){
     vector<double> results(steps,0.0);
     
     for(unsigned i=0; i < strats->size();i++){
@@ -707,8 +863,7 @@ bool Kernel::stepsdistribution(StrategySpace* strats, double v1, double eps, uns
         for(unsigned j=0; j < repeats; j++){
             Strategy first = *elm;
             Strategy second = *elm;
-            first.stochasticInferDecision(&_game, eps, ran);
-            second.stochasticInferDecision(&_game, eps, ran);
+            inferWithApproach(&first, &second, eps, ran, approach);
             unsigned whenp1=first.decisionR1();
             if(whenp1%2!=0 && whenp1 != _game.length())
                 whenp1+=1;
@@ -734,10 +889,10 @@ bool Kernel::stepsdistribution(StrategySpace* strats, double v1, double eps, uns
 }
 
 
-double Kernel::calcMSE(StrategySpace* strats, CtpEntry* elm, double eps, unsigned repeats, RanGen* ran){
+double Kernel::calcMSE(StrategySpace* strats, CtpEntry* elm, double eps, unsigned repeats, RanGen* ran, unsigned approach){
     double result = 0.0;
     unsigned len = elm->steps()+1;
-//    cout << *elm << endl;
+    cout << *elm << endl;
     vector<double> stpvec(len,0.0);
     for(unsigned i=0; i < strats->size();i++){
         double tmp = gsl_vector_get(_stationary, i);
@@ -745,8 +900,7 @@ double Kernel::calcMSE(StrategySpace* strats, CtpEntry* elm, double eps, unsigne
         for(unsigned j=0; j < repeats; j++){
             Strategy first = *s;
             Strategy second = *s;
-            first.stochasticInferDecision(&_game, eps, ran);
-            second.stochasticInferDecision(&_game, eps, ran);
+            inferWithApproach(&first, &second, eps, ran, approach);
             unsigned whenp1=first.decisionR1();
             if(whenp1%2!=0 && whenp1 != _game.length())
                 whenp1+=1;
@@ -772,12 +926,27 @@ double Kernel::averageFitness(StrategySpace* strats){
     for(unsigned i=0; i < strats->size();i++){
         double sdstrat1 = gsl_vector_get(_stationary, i);
         for(unsigned j=0; j < strats->size(); j++){
-            double sdstrat2 = gsl_vector_get(_stationary, i);
+            double sdstrat2 = gsl_vector_get(_stationary, j);
             double payoff = gsl_matrix_get(_payoffs, i, j);
             total += (payoff*sdstrat1*sdstrat2);
         }
     }
-    return (total/2.0);
+    return (total/2.0); // why 2?
+}
+
+double Kernel::averagePrediction(StrategySpace* strats){
+
+    double total = 0;
+    for(unsigned i=0; i < strats->size();i++){
+        double sdstrat1 = gsl_vector_get(_stationary, i);
+        double tmp = 0;
+        for(unsigned j=0; j < strats->size(); j++){
+            double pred = gsl_matrix_get(_predictions, i, j);
+            tmp += pred;
+        }
+        total += ((tmp/double(strats->size()))*sdstrat1);
+    }
+    return (total);
 }
 
 

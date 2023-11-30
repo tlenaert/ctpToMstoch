@@ -31,6 +31,8 @@ public:
         _trans = NULL;
         _stationary=NULL;
         _payoffs=NULL;
+        _predictions=NULL;
+        _mixed=NULL;
     };
 
     
@@ -39,10 +41,14 @@ public:
             gsl_matrix_free(_fprobs);
         if(_trans != NULL)
             gsl_matrix_free(_trans);
+        if(_mixed != NULL)
+            gsl_matrix_free(_mixed);
         if(_stationary != NULL)
             gsl_vector_free(_stationary);
         if(_payoffs != NULL)
             gsl_matrix_free(_payoffs);
+        if(_predictions != NULL)
+            gsl_matrix_free(_predictions);
     }
     
     bool setGame(CtpGame& other) {
@@ -50,8 +56,8 @@ public:
         return true;
     }
     
-    bool execute(StrategySpace* strats, double betas,double mut, double eps, unsigned repeats, RanGen* ran, double scaling);
-    bool calcPayoffs(StrategySpace* strategies,double eps, unsigned repeats, RanGen* ran, double cost);
+    bool execute(StrategySpace* strats, double betas,double mut, double eps, unsigned repeats, RanGen* ran, double scaling, unsigned approach=0);
+    bool calcPayoffs(StrategySpace* strategies,double eps, unsigned repeats, RanGen* ran, double cost, unsigned approach=0);
     bool execute(StrategySpace* strats, double betas, double mut,double scaling);
     
     void showEvoRobustStrategies(StrategySpace* strats, double mult);
@@ -66,42 +72,48 @@ public:
 
 
     bool levelKdistribution(StrategySpace* strats, double v1, unsigned levels, ofstream& of);
-    bool stepsdistribution(StrategySpace* strats, double v1, double eps, unsigned steps, unsigned repeats, RanGen* ran, ofstream& of);
-    bool decisionDistribution(StrategySpace* strats, double v1, double eps, unsigned repeats, RanGen* ran, ofstream& of);
-    bool decperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, RanGen* ran, ofstream& of);
-    bool misbeliefperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, RanGen* ran, ofstream& of);
+    bool stepsdistribution(StrategySpace* strats, double v1, double eps, unsigned steps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of);
+    bool decisionDistribution(StrategySpace* strats, double v1, double eps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of);
+    bool decperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats,unsigned approach, RanGen* ran, ofstream& of);
+    bool misbeliefperkDistribution(StrategySpace* strats, double v1, unsigned levels, double eps, unsigned repeats, unsigned approach, RanGen* ran, ofstream& of);
 
     bool beliefDistribution(StrategySpace* strats, double v1, ofstream& of);  // same as full stationary distribution
     double averageBelief(StrategySpace* strats);
     double averageLevel(StrategySpace* strats);
     double averageFitness(StrategySpace* strats);
+    double averagePrediction(StrategySpace* strats);
 
-    double averageDecision(StrategySpace* strats, unsigned repeats, double eps, RanGen* ran);
-    double calcMSE(StrategySpace* strats, CtpEntry* elm, double eps, unsigned repeats, RanGen* ran);
+    double averageDecision(StrategySpace* strats, unsigned repeats, double eps, RanGen* ran, unsigned approach=0);
+    double calcMSE(StrategySpace* strats, CtpEntry* elm, double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
     
     bool payoffResults(StrategySpace* strats, double eps, ofstream& of);
     long double gradientSimple(StrategySpace* strats, Strategy* inv_action, unsigned num_inv, double beta, double mut);
     long double gradient(StrategySpace* strats, Strategy* inv_action, unsigned num_inv, double beta, double mut);
+    bool generateMixedStrategies(StrategySpace* strategies,unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
+    bool generateSingleMixedStrategy(Strategy* s, unsigned role, unsigned steps, double eps, unsigned repeats, RanGen* ran, unsigned approach);
+//    bool generateMixedStrategies2(StrategySpace* strategies,unsigned steps, double eps, unsigned repeats, RanGen* ran, double probcorr);
 
     friend ostream & operator<<(ostream &o, Kernel& k){return k.displayStationary(o);}
 
 protected:
     bool initialize();
-    
-    double calcAvgPayoff(Strategy* first, Strategy* second, double eps, unsigned repeats, RanGen* ran);
+    void inferWithApproach(Strategy* strat, double eps, RanGen* ran, unsigned approach=0);
+    void inferWithApproach(Strategy* first, Strategy* second, double eps, RanGen* ran, unsigned approach=0);
 
-    void calcPairwiseFitness(unsigned num_inv, Strategy* res, Strategy* inv, long double& res_fit, long double& inv_fit,double eps, unsigned repeats, RanGen* ran);
+    vector<double> calcAvgPayoff(Strategy* first, Strategy* second, double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
+
+    void calcPairwiseFitness(unsigned num_inv, Strategy* res, Strategy* inv, long double& res_fit, long double& inv_fit,double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
     void calcPairwiseFitness(unsigned num_inv, unsigned res, unsigned inv, long double& res_fit, long double& inv_fit);
 
     long double fermiFunction(bool sign_beta, long double first, long double second, double beta);
   
-    void probIncreaseDecrease(unsigned num_inv, Strategy* res, Strategy* inv, long double& increase, long double& decrease, double betas, double mut, double eps, unsigned repeats, RanGen* ran);
+    void probIncreaseDecrease(unsigned num_inv, Strategy* res, Strategy* inv, long double& increase, long double& decrease, double betas, double mut, double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
     void probIncreaseDecrease(unsigned num_inv, unsigned res, unsigned inv, long double& increase, long double& decrease, double betas, double mut);
 
-    long double fixationProbability(Strategy* res, Strategy* inv, double betas, double mut,double eps, unsigned repeats, RanGen* ran);
+    long double fixationProbability(Strategy* res, Strategy* inv, double betas, double mut,double eps, unsigned repeats, RanGen* ran, unsigned approach=0);
     long double fixationProbability(unsigned res, unsigned inv, double betas, double mut);
 
-    void transitionMatrix(StrategySpace* strats, double betas, double mut, double eps, unsigned repeats, RanGen* ran, double scaling);
+    void transitionMatrix(StrategySpace* strats, double betas, double mut, double eps, unsigned repeats, RanGen* ran, double scaling, unsigned approach=0);
     void transitionMatrix(StrategySpace* strats, double betas, double mut, double scaling);
 
     bool createStationarySDistribution();
@@ -119,9 +131,11 @@ protected:
     CtpGame _game;
     
     gsl_matrix* _payoffs;
+    gsl_matrix* _predictions;
     gsl_matrix* _fprobs;
     gsl_matrix* _trans;
     gsl_vector* _stationary;
+    gsl_matrix* _mixed;
 
 };
 
