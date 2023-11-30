@@ -1,5 +1,5 @@
 # ctpToMstoch
-This C++ code was used to produce the small mutation limit results in the paper T. Lenaerts, J.M. Pacheco and F.C. Santos (2022) Evolution of a theory of mind. 
+This C++ code was used to produce the small mutation limit results in the paper T. Lenaerts, M. Saponara, J.M. Pacheco and F.C. Santos (2023) Evolution of a theory of mind. 
 The functions for producing each result are part of the main file, which needs to be edited and recompiled for each result.
 
 ## Contents
@@ -89,4 +89,4 @@ The R-scripts can simply be executed in the same folder as the raw data files.
 
 When using or extending this code, please cite :
 
-T. Lenaerts, J.M. Pacheco and F.C. Santos (2022) Evolution of a Theory of Mind ...
+T. Lenaerts, M. Saponara, J.M. Pacheco and F.C. Santos (2023) Evolution of a Theory of Mind ...
