@@ -91,3 +91,5 @@ The R-scripts can simply be executed in the same folder as the raw data files.
 When using or extending this code, please cite :
 
 T. Lenaerts, M. Saponara, J.M. Pacheco and F.C. Santos (2023) Evolution of a Theory of Mind ...
+This version of the code is archived on Zenodo: [![DOI](https://zenodo.org/badge/556244409.svg)](https://zenodo.org/doi/10.5281/zenodo.10230141)
+
